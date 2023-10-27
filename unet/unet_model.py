@@ -1,6 +1,8 @@
 """ Full assembly of the parts to form the complete network """
-
-from .unet_parts import *
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from unet_parts import *
 
 
 class UNet(nn.Module):
@@ -20,6 +22,7 @@ class UNet(nn.Module):
         self.up2 = (Up(512, 256 // factor, bilinear))
         self.up3 = (Up(256, 128 // factor, bilinear))
         self.up4 = (Up(128, 64, bilinear))
+
         self.outc = (OutConv(64, n_classes))
 
     def forward(self, x):
@@ -32,6 +35,7 @@ class UNet(nn.Module):
         x = self.up2(x, x3)
         x = self.up3(x, x2)
         x = self.up4(x, x1)
+        # return x
         logits = self.outc(x)
         return logits
 
@@ -46,3 +50,7 @@ class UNet(nn.Module):
         self.up3 = torch.utils.checkpoint(self.up3)
         self.up4 = torch.utils.checkpoint(self.up4)
         self.outc = torch.utils.checkpoint(self.outc)
+
+if __name__=="__main__":
+    model=UNet(1,1)
+    print(f"size of model(mb):{sum(p.numel() for p in model.parameters())*4/1024/1024}")
