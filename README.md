@@ -8,4 +8,10 @@
 - ```/smart_predict_validate.py``` 两个Unet在验证集的结果（废弃）
 - ```/trans_tran.py``` 训练trans_unet
 - ```/trans_smart_predict_validate.py``` 
-- - ```/trans_smart_predict_predict_real.py``` 
+-  ```/trans_smart_predict_predict_real.py``` 
+- ```/data``` 训练数据
+- ```/chkps```训练记录和checkpoints 
+- ```/unet``` unet模型
+-  ```/trans_unet``` trans_unet模型
+
+### 任务
