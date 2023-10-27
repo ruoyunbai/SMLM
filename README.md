@@ -24,7 +24,11 @@
 - ```/chkps```训练记录和checkpoints 
 - ```/unet``` unet模型
 -  ```/trans_unet``` trans_unet模型
-
+  
+##### data下载：
+>https://bhpan.buaa.edu.cn/link/AA6E92C9F8BBCF462E9ADBDC61CCC4F735
+文件夹名：smart
+有效期限：2024-07-12 13:50 
 ### 任务
 ```smart_predict_validate.py```增加召回率、精度指标
 
