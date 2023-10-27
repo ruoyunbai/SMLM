@@ -8,3 +8,5 @@ venv/
 .idea/
 wandb/
 data/*
+data.zip
+data.zip.tmp
