@@ -216,6 +216,9 @@ data_path1 = './data/2,1000/'
 data_path2 = './data/2,1000,500/'
 data_path3='./data/0.05,1600/'
 data_path4='./data/0.05/'
+data_path5='./data/0.1/'
+data_path6='./data/0.15/'
+data_path7='./data/0.2/'
 data_path_epl='./data/epl/'
 data_path_cell='./data/cell/'
 data_path_gfp='./data/gfp/'
@@ -268,3 +271,31 @@ class MultiDataset(Dataset):
             return self.data3[idx-4500]
         else:
             return self.data4[idx-5400]
+        
+class MultiDatasetV1(Dataset):
+    def __init__(self, split='train',ret_num=False,bin_gt=False):
+        self.datasets =  [
+            RandomDataset(data_path1, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path2, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path3, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path4, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path5, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path6, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path7, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path_epl, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path_cell, split, ret_num, bin_gt=bin_gt),
+            RandomDataset(data_path_gfp, split, ret_num, bin_gt=bin_gt)
+        ]
+        
+    def __len__(self):
+        return sum(len(dataset) for dataset in self.datasets)
+    
+    def __getitem__(self, idx):
+        cumulative_length = 0
+        for dataset in self.datasets:
+            if idx < cumulative_length + len(dataset):
+                return dataset[idx - cumulative_length]
+            cumulative_length += len(dataset)
+
+        raise IndexError('index out of range')
+ 

@@ -42,7 +42,7 @@ def generate_map(locs, x_max=64, y_max=64, sigma=1):
 
 x_max=128
 y_max=128
-data_path = './data/0.05/'
+data_path = './data/0.2/'
 # data_path = './data/1/frame_logger.csv'
 # df=pd.read_csv("./data/1/frame_logger.csv")
 df=pd.read_csv(f"{data_path}frame_logger.csv")

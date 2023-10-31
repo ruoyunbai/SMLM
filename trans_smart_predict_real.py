@@ -15,9 +15,9 @@ import skimage.measure as measure
 from trans_unet.transunet import TransUNet as UNet
 
 
-val_ds = PreDataset("cell8_2_10000.tif",split='val',contrast=10)
-
-# val_ds = PreDataset("img_000000005_Default_000.tif",split='val',contrast=1)
+# val_ds = PreDataset("cell8_2_10000.tif",split='val',contrast=10)
+# img_000000025_Default_000
+val_ds = PreDataset("img_000000019_Default_000.tif",split='val',contrast=1)
 # val_ds = PreDataset("EPFL_Microtubule_Alexa647.tif",split='val')
 val_dl = DataLoader(val_ds, batch_size=1,shuffle=False)
 device = torch.device('cpu') 
@@ -38,6 +38,8 @@ model.eval()
 
 with torch.no_grad():
     x = next(iter(val_dl))[:,:128,:128]
+    # print(val_ds[25].shape)
+    # x=val_ds[25].unsqueeze(0)[:,:,:128,:128]
     x = x.to(device)
     x=(x-x.min())/(x.max()-x.min())
     # 中值滤波去噪
