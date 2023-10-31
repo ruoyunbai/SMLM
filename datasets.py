@@ -89,6 +89,21 @@ class RandomDataset(Dataset):
         self.ret_num=ret_num
         self.nums=[]
         self.bin_gt=bin_gt
+
+        
+        if self.split == 'train':
+            start_idx = 0
+            end_idx = int(len(self.frames) * 0.8)
+        elif self.split == 'valid':
+            start_idx = int(len(self.frames) * 0.8)
+            end_idx = int(len(self.frames) * 0.9)
+        else:
+            start_idx = int(len(self.frames) * 0.9)
+            end_idx = len(self.frames)
+
+        self.frames = self.frames[start_idx:end_idx]
+
+
         if self.bin_gt:
             device = torch.device('cuda:0') 
             model = UNet(n_channels=1, n_classes=1)
@@ -125,14 +140,21 @@ class RandomDataset(Dataset):
             for i in range(1000):
                 self.nums.append(nums_dict[i])
 
-                
+            if self.split=='train':
+                self.nums=self.nums[:800]
+            elif self.split=='val':
+                self.nums=self.nums[800:900]
+            else:
+                self.nums=self.nums[900:]
+
+        self.len=len(self.frames) 
                 
 
 
     
     def __getitem__(self, idx):
-        if self.split=='val':
-            idx+=900
+        # if self.split=='val':
+        #     idx+=900
         image = self.frames[idx]
         
         if self.bin_gt:
@@ -165,10 +187,11 @@ class RandomDataset(Dataset):
             return torch.tensor(image).permute(2,0,1).float(), torch.tensor(gt).unsqueeze(-1).permute(2,0,1).float(),self.nums[idx]  
     
     def __len__(self):
-        if self.split=='train':
-          return len(self.frames)-100
-        else:
-          return 100
+        # if self.split=='train':
+        #   return len(self.frames)-100
+        # else:
+        #   return 100
+        return self.len
     
     def tiff_to_array(self,input_file, normalize=True):
         """Transforms a tiff image/stack into a (n, x, y, 1) numpy array of floats.
