@@ -1,6 +1,9 @@
-tain_all:
-	conda activate base
-	python swin_train.py
-
-	python train2.py
+all:
+	@echo "Activating conda environment"
+	@conda activate base && \
+	echo "Running swin_train.py" && \
+	python swin_train.py && \
+	echo "Running train2.py" && \
+	python train2.py && \
+	echo "Running trans_train.py" && \
 	python trans_train.py
