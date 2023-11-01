@@ -42,39 +42,44 @@ def generate_map(locs, x_max=64, y_max=64, sigma=1):
 
 x_max=128
 y_max=128
-data_path = './data/0.2/'
-# data_path = './data/1/frame_logger.csv'
-# df=pd.read_csv("./data/1/frame_logger.csv")
-df=pd.read_csv(f"{data_path}frame_logger.csv")
-# df=pd.read_csv("./data/2,1000,500/frame_logger.csv")
-# 分组
-grouped = df.groupby('frame') 
-stack=[]
-import os
-# if not os.path.exists('./data/2,1000,500/ground_truth'):
-#   os.makedirs('./data/2,1000,500/ground_truth')
-if not os.path.exists(f"{data_path}ground_truth"):
-  os.makedirs(f"{data_path}/ground_truth")
-frame_ids=[]
-for frame, group in grouped:
-  frame_ids.append(frame-1)
-#   locs = group[['x','y']].values
-  locs = group[['x [px]','y [px]']].values
-
+data_paths=["./data/0.1/","./data/0.15/","./data/0.2/"]
+for data_path in data_paths:
+  # data_path = './data/0.2/'
+  # data_path = './data/1/frame_logger.csv'
+  # df=pd.read_csv("./data/1/frame_logger.csv")
+  df=pd.read_csv(f"{data_path}frame_logger.csv")
+  # df=pd.read_csv("./data/2,1000,500/frame_logger.csv")
+  # 分组
+  grouped = df.groupby('frame') 
+  stack=[]
+  import os
+  # if not os.path.exists('./data/2,1000,500/ground_truth'):
+  #   os.makedirs('./data/2,1000,500/ground_truth')
+  import shutil
+  shutil.rmtree(f"{data_path}ground_truth")
+  if not os.path.exists(f"{data_path}ground_truth"):
+    os.makedirs(f"{data_path}/ground_truth")
   
-  genMap = generate_map(locs, x_max, y_max) 
-  stack.append(genMap)
-  print(f"{frame-1 } {len(locs)} {genMap.sum()} {genMap.shape}")
-  # 保存图像
-#   image_name = './data/2,1000,500/ground_truth/frame_0.1_{}.jpg'.format(frame-1) 
-  image_name = f'{data_path}ground_truth/frame_{frame-1}.jpg'
-  plt.imsave(image_name, genMap,cmap='gray')
+  frame_ids=[]
+  for frame, group in grouped:
+    frame_ids.append(frame-1)
+  #   locs = group[['x','y']].values
+    locs = group[['x [px]','y [px]']].values
 
-# tifffile.imsave('density_stack.tif', stack)
-for i in range(1000):
-    if not i in frame_ids:
-        image_name = f'{data_path}ground_truth/frame_{i}.jpg'
-        print(image_name)
-        plt.imsave(image_name, np.zeros((x_max,y_max)),cmap='gray')
-        
+    
+    genMap = generate_map(locs, x_max, y_max) 
+    stack.append(genMap)
+    print(f"{frame-1 } {len(locs)} {genMap.sum()} {genMap.shape}")
+    # 保存图像
+  #   image_name = './data/2,1000,500/ground_truth/frame_0.1_{}.jpg'.format(frame-1) 
+    image_name = f'{data_path}ground_truth/frame_{int(frame-1)}.jpg'
+    plt.imsave(image_name, genMap,cmap='gray')
+
+  # tifffile.imsave('density_stack.tif', stack)
+  for i in range(1000):
+      if not i in frame_ids:
+          image_name = f'{data_path}ground_truth/frame_{int(i)}.jpg'
+          print(image_name)
+          plt.imsave(image_name, np.zeros((x_max,y_max)),cmap='gray')
+          
 

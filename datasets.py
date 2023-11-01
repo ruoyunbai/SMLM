@@ -157,13 +157,30 @@ class RandomDataset(Dataset):
         #     idx+=900
         image = self.frames[idx]
         
-        if self.bin_gt:
-            input_name=self.data_path+'ground_truth/frame_{}.jpg'.format(idx)
-            gt_name=self.data_path+'ground_truth_bin/frame{}.jpg'.format(idx)
+        if self.split=='train':
+            real_idx=idx
+
+        elif self.split=='valid':
+            real_idx=idx+800
         else:
-            gt_name=self.data_path+'ground_truth/frame_{}.jpg'.format(idx)
+            real_idx=idx+900
+
+        if self.bin_gt:
+            input_name=self.data_path+'ground_truth/frame_{}.jpg'.format(real_idx)
+            gt_name=self.data_path+'ground_truth_bin/frame{}.jpg'.format(real_idx)
+        else:
+            gt_name=self.data_path+'ground_truth/frame_{}.jpg'.format(real_idx)
         # print(gt_name)
         gt =cv2.imread(gt_name,0)
+
+        try:
+            if gt.all()==None:
+                print(gt_name)
+                print(gt)
+        except:
+            print(gt_name)
+            print(gt)
+            raise Exception('None')
         if self.bin_gt:
             # x=cv2.imread(input_name,0)
             x=image
@@ -321,4 +338,11 @@ class MultiDatasetV1(Dataset):
             cumulative_length += len(dataset)
 
         raise IndexError('index out of range')
+if __name__=="__main__":
+    ds=MultiDatasetV1(split="valid")
+    fig,ax=plt.subplots(1,2)
+    ax[0].imshow(ds[999][0].squeeze(0).squeeze(0).cpu().detach().numpy())
+    ax[1].imshow(ds[999][1].squeeze(0).squeeze(0).cpu().detach().numpy())
+    plt.show()
+
  

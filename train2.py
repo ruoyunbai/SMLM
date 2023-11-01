@@ -10,13 +10,13 @@ import numpy as np
 import pandas as pd
 import os   
 import cv2
-from datasets import MultiDataset
+from datasets import MultiDatasetV1 as MultiDataset
 from torchvision.transforms import functional as F
 import random
 
 # data_path = './data/2,1000,500/'
 data_path = './data/multi/'
-suf="v5.1"
+suf="Unet"
 bin_gt=False
 # bin_gt=True
 batch_size=40
@@ -159,7 +159,7 @@ def train(model, train_loader, val_loader, num_epochs):
     model.to(device)
     
     criterion = nn.MSELoss() 
-    optimizer = torch.optim.Adam(model.parameters())
+    optimizer = torch.optim.AdamW(model.parameters())
     best_val_loss = float('inf') 
     patience = 20
     patience_counter = 0
@@ -198,11 +198,11 @@ def train(model, train_loader, val_loader, num_epochs):
 
             if idx==0 and epoch_id==0:
                 print(f'x_min:{x.min()},x_max:{x.max()},y_min:{y.min()},y_max:{y.max()},pred_min:{pred.min()},pred_max:{pred.max()}')
-                fig, ax = plt.subplots(1, 3, figsize=(8, 4))
-                ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
-                ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
-                ax[2].imshow(pred[0].permute(1,2,0).cpu().detach().numpy())
-                plt.show()
+                # fig, ax = plt.subplots(1, 3, figsize=(8, 4))
+                # ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
+                # ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
+                # ax[2].imshow(pred[0].permute(1,2,0).cpu().detach().numpy())
+                # plt.show()
             idx+=1
             
         # 验证及保存模型
@@ -212,7 +212,7 @@ def train(model, train_loader, val_loader, num_epochs):
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss
-                }, f'chkps/{data_path}{suf}/checkpoint_{epoch+1}.pt')
+                }, f'chkps/{data_path}{suf}/checkpoint_latest.pt')
             # 验证loss
 
         val_loss = 0 
@@ -249,6 +249,12 @@ def train(model, train_loader, val_loader, num_epochs):
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             patience_counter = 0 
+            torch.save({
+    'epoch': epoch+1,
+    'model_state_dict': model.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'loss': loss
+    }, f'chkps/{data_path}{suf}/checkpoint_best.pt')
         else:
             patience_counter += 1
             
@@ -259,12 +265,13 @@ def train(model, train_loader, val_loader, num_epochs):
         train_losses.append(loss.item())
         val_losses.append(val_loss)
         epoch_id+=1
-
+    plt.figure()
     plt.plot(train_losses, label='Train Loss')
     plt.plot(val_losses, label='Val Loss')
     plt.legend()
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
+    plt.savefig(f'chkps/{data_path}{suf}/log/loss.jpg')
     # plt.show()   
 # 准备数据        
 # train_ds = RandomDataset(data_path,split='train')  
@@ -280,7 +287,7 @@ val_ds = MultiDataset(split='val',bin_gt=bin_gt)
 val_dl = DataLoader(val_ds, batch_size=batch_size)
 
 model = UNet(n_channels=1, n_classes=1)
-chkpt= torch.load('chkps/data/multi/v5/checkpoint_30.pt')
+# chkpt= torch.load('chkps/data/multi/v5/checkpoint_30.pt')
 # model.load_state_dict(chkpt['model_state_dict'])
 model.to(device)
 # model.train()

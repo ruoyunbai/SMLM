@@ -1,0 +1,6 @@
+tain_all:
+	conda activate base
+	python train swin_train.py
+
+	python train train2.py
+	python train trans_train.py

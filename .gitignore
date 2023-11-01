@@ -11,3 +11,6 @@ data/*
 chkps/*
 data.zip
 data.zip.tmp
+coco
+yolov8
+coco/*
