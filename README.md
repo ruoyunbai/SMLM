@@ -35,3 +35,8 @@
 gwx:SwinUnet、MedSam
 
 nr:NNUnet
+
+
+
+
+	python train swin_train.py &	python train train2.py &	python train trans_train.py
