@@ -236,14 +236,15 @@ def train(model, train_loader, val_loader, num_epochs):
                 pred = model(x)
                 # loss = criterion(pred, y)
                 val_loss += criterion(pred, y).item()
-                fig,ax=plt.subplots(1,3)
-                ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
-                ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
-                ax[2].imshow(pred[0].permute(1,2,0).cpu().detach().numpy())
-                plt.savefig(f'chkps/{data_path}{suf}/log/val_{epoch_id+1}.jpg')
-                plt.cla()
-                plt.clf()
-                plt.close()
+                if t_id==0:
+                    fig,ax=plt.subplots(1,3)
+                    ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
+                    ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
+                    ax[2].imshow(pred[0].permute(1,2,0).cpu().detach().numpy())
+                    plt.savefig(f'chkps/{data_path}{suf}/log/val_{epoch_id+1}.jpg')
+                    plt.cla()
+                    plt.clf()
+                    plt.close()
                 t_id+=1
             val_loss /= len(val_loader)
 

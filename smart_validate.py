@@ -21,7 +21,7 @@ model = UNet(n_channels=1, n_classes=1)
 # chkpt= torch.load('chkps/data/multi/checkpoint_1_110.pt')
 # chkpt= torch.load('chkps/data/multi/v1/checkpoint_1_40.pt')
 # chkpt= torch.load('chkps/data/multi/v2/checkpoint_60.pt')
-chkpt= torch.load('chkps/data/multi/v3/checkpoint_10.pt')
+chkpt= torch.load('chkps/data/multi/Unet/checkpoint_best.pt')
 
 model.load_state_dict(chkpt['model_state_dict'])
 model=model.to(device)
@@ -69,7 +69,9 @@ with torch.no_grad():
         # 标记mask中不同的连通区域
         label_mask = measure.label(mask) 
         all_labels = measure.label(mask)
-
+        print(pred.shape)
+        print(mask.shape)
+        print(label_mask.shape)
         all_nums = len(measure.regionprops(all_labels))
         
         
@@ -103,6 +105,8 @@ with torch.no_grad():
         diff=np.abs(real_num.item()-len(centroids))
         diff_list.append(diff.item())
         diff_list2.append(np.abs(real_num.item()-all_nums))
+
+        
         print(f"min:{np.min(areas)},max:{np.max(areas)},mean:{np.mean(areas)},median:{np.median(areas)}")
 
         print(f'id:{idx}, diff:{diff.item()},real:{real_num.item()},len:{len(centroids)},pred:{all_nums},more:{more}')
@@ -114,7 +118,8 @@ with torch.no_grad():
             fig, ax = plt.subplots(1, 3, figsize=(8, 4))
             ax[0].imshow(x.squeeze())
             ax[0].set_title('input')
-            ax[1].imshow(pred.squeeze())
+            y=y>(y.mean()+y.std())
+            ax[1].imshow(y.squeeze())
             ax[1].set_title('prediction')
             ax[2].imshow(mask)
             plt.scatter(x=[p[1] for p in centroids], y=[p[0] for p in centroids], c='r', s=5)

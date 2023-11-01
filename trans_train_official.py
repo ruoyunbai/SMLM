@@ -14,71 +14,48 @@ import cv2
 from datasets import MultiDatasetV1 as MultiDataset
 from torchvision.transforms import functional as F
 import random
-# from trans_unet.transunet import TransUNet as UNet
-from SwinUnet.vision_transformer import SwinUnet as UNet
-from SwinUnet.config import get_config
-parser = argparse.ArgumentParser()
-
-def SwinParse():
-    parser.add_argument('--root_path', type=str,
-                        default='../data/Synapse/train_npz', help='root dir for data')
-    parser.add_argument('--dataset', type=str,
-                        default='Synapse', help='experiment_name')
-    parser.add_argument('--list_dir', type=str,
-                        default='./lists/lists_Synapse', help='list dir')
-    parser.add_argument('--num_classes', type=int,
-                        default=1, help='output channel of network')
-    parser.add_argument('--output_dir', type=str, help='output dir')                   
-    parser.add_argument('--max_iterations', type=int,
-                        default=30000, help='maximum epoch number to train')
-    parser.add_argument('--max_epochs', type=int,
-                        default=150, help='maximum epoch number to train')
-    parser.add_argument('--batch_size', type=int,
-                        default=24, help='batch_size per gpu')
-    parser.add_argument('--n_gpu', type=int, default=1, help='total gpu')
-    parser.add_argument('--deterministic', type=int,  default=1,
-                        help='whether use deterministic training')
-    parser.add_argument('--base_lr', type=float,  default=0.01,
-                        help='segmentation network learning rate')
-    parser.add_argument('--img_size', type=int,
-                        default=128, help='input patch size of network input')
-    parser.add_argument('--seed', type=int,
-                        default=1234, help='random seed')
-    parser.add_argument('--cfg', type=str, default="SwinUnet\configs\swin_tiny_patch4_window7_224_lite.yaml", metavar="FILE", help='path to config file', )
-    parser.add_argument(
-            "--opts",
-            help="Modify config options by adding 'KEY VALUE' pairs. ",
-            default=None,
-            nargs='+',
-        )
-    parser.add_argument('--zip', action='store_true', help='use zipped dataset instead of folder dataset')
-    parser.add_argument('--cache-mode', type=str, default='part', choices=['no', 'full', 'part'],
-                        help='no: no cache, '
-                                'full: cache all data, '
-                                'part: sharding the dataset into nonoverlapping pieces and only cache one piece')
-    parser.add_argument('--resume', help='resume from checkpoint')
-    parser.add_argument('--accumulation-steps', type=int, help="gradient accumulation steps")
-    parser.add_argument('--use-checkpoint', action='store_true',
-                        help="whether to use gradient checkpointing to save memory")
-    parser.add_argument('--amp-opt-level', type=str, default='O1', choices=['O0', 'O1', 'O2'],
-                        help='mixed precision opt level, if O0, no amp is used')
-    parser.add_argument('--tag', help='tag of experiment')
-    parser.add_argument('--eval', action='store_true', help='Perform evaluation only')
-    parser.add_argument('--throughput', action='store_true', help='Test throughput only')
-
-SwinParse()
-args = parser.parse_args()
-config = get_config(args)
-
+from TransUnet.vit_seg_modeling import VisionTransformer as UNet
+from TransUnet.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
 
 # data_path = './data/2,1000,500/'
 data_path = './data/multi/'
-suf="SwinUnet1"
+suf="TransUnet"
 bin_gt=False
 # bin_gt=True
 batch_size=40
 trans_rate=0.5
 device = torch.device('cuda:0')
+parser = argparse.ArgumentParser()
+parser.add_argument('--root_path', type=str,
+                    default='../data/Synapse/train_npz', help='root dir for data')
+parser.add_argument('--dataset', type=str,
+                    default='Synapse', help='experiment_name')
+parser.add_argument('--list_dir', type=str,
+                    default='./lists/lists_Synapse', help='list dir')
+parser.add_argument('--num_classes', type=int,
+                    default=1, help='output channel of network')
+parser.add_argument('--max_iterations', type=int,
+                    default=30000, help='maximum epoch number to train')
+parser.add_argument('--max_epochs', type=int,
+                    default=150, help='maximum epoch number to train')
+parser.add_argument('--batch_size', type=int,
+                    default=24, help='batch_size per gpu')
+parser.add_argument('--n_gpu', type=int, default=1, help='total gpu')
+parser.add_argument('--deterministic', type=int,  default=1,
+                    help='whether use deterministic training')
+parser.add_argument('--base_lr', type=float,  default=0.01,
+                    help='segmentation network learning rate')
+parser.add_argument('--img_size', type=int,
+                    default=128, help='input patch size of network input')
+parser.add_argument('--seed', type=int,
+                    default=1234, help='random seed')
+parser.add_argument('--n_skip', type=int,
+                    default=3, help='using number of skip-connect, default is num')
+parser.add_argument('--vit_name', type=str,
+                    default='R50-ViT-B_16', help='select one vit model')
+parser.add_argument('--vit_patches_size', type=int,
+                    default=16, help='vit_patches_size, default is 16')
+args = parser.parse_args()
 # 自定义Dataset加载TIFF数据
 class RandomDataset(Dataset):
     def __init__(self, data_path,split='train'):
@@ -247,7 +224,6 @@ def train(model, train_loader, val_loader, num_epochs):
             # y=y/y.max()
             if random.random() <trans_rate:
                 x[:],y[:] = transform_image(x,y)
-            # print(f"x shape:{x.shape},y shape:{y.shape}")
             pred= model(x)
             loss = criterion(pred, y)
             
@@ -257,11 +233,11 @@ def train(model, train_loader, val_loader, num_epochs):
 
             if idx==0 and epoch_id==0:
                 print(f'x_min:{x.min()},x_max:{x.max()},y_min:{y.min()},y_max:{y.max()},pred_min:{pred.min()},pred_max:{pred.max()}')
-                # fig, ax = plt.subplots(1, 3, figsize=(8, 4))
-                # ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
-                # ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
-                # ax[2].imshow(pred[0].permute(1,2,0).cpu().detach().numpy())
-                # plt.show()
+                fig, ax = plt.subplots(1, 3, figsize=(8, 4))
+                ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
+                ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
+                ax[2].imshow(pred[0].permute(1,2,0).cpu().detach().numpy())
+                plt.show()
             idx+=1
             
         # 验证及保存模型
@@ -296,7 +272,6 @@ def train(model, train_loader, val_loader, num_epochs):
                 # loss = criterion(pred, y)
                 val_loss += criterion(pred, y).item()
                 if t_id==0:
-
                     fig,ax=plt.subplots(1,3)
                     ax[0].imshow(x[0].permute(1,2,0).cpu().detach().numpy())
                     ax[1].imshow(y[0].permute(1,2,0).cpu().detach().numpy())
@@ -347,8 +322,12 @@ train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
 val_ds = MultiDataset(split='val',bin_gt=bin_gt)
 # val_ds = MultiDataset(split='val',bin_gt=False)
 val_dl = DataLoader(val_ds, batch_size=batch_size)
-
-model = UNet(config=config,img_size=128,num_classes=1)
+config_vit = CONFIGS_ViT_seg[args.vit_name]
+config_vit.n_classes = args.num_classes
+config_vit.n_skip = args.n_skip
+if args.vit_name.find('R50') != -1:
+    config_vit.patches.grid = (int(args.img_size / args.vit_patches_size), int(args.img_size / args.vit_patches_size))
+model = UNet(config_vit,img_size=128,num_classes=1)
 
 # model.load_state_dict(chkpt['model_state_dict'])
 model.to(device)

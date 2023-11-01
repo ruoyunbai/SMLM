@@ -7,3 +7,18 @@ all:
 	python train2.py && \
 	echo "Running trans_train.py" && \
 	python trans_train.py
+trans:
+	@echo "Activating conda environment"
+	@conda activate base && \
+	echo "Running trans_train.py" && \
+	python trans_train.py
+swin:
+	@echo "Activating conda environment"
+	@conda activate base && \
+	echo "Running swin_train.py" && \
+	python swin_train.py
+unet:
+	@echo "Activating conda environment"
+	@conda activate base && \
+	echo "Running train2.py" && \
+	python train2.py
